@@ -11,54 +11,77 @@ class RatingController
     public function createRating(Request $request, Response $response)
     {
         $data = $request->getParsedBody();
-        $estrellas = (int)$data['estrellas'];
-        $usuario_id = (int)$data['usuario_id'];
-        $juego_id = (int)$data['juego_id'];
+         //chear que este logeuado
+    $token = $data['token'] ;
+    $vencimiento_token = $data['vencimiento_token'];
 
+        $estrellas = (int) $data['estrellas'];
+        $usuario_id = (int) $data['usuario_id'];
+        $juego_id = (int) $data['juego_id'];
+
+        // Validar número de estrellas
         if ($estrellas < 1 || $estrellas > 5) {
-            $response->getBody()->write(json_encode(['message' => 'Número de estrellas inválido']));
+            $payload = ['message' => 'Número de estrellas inválido'];
+            $response->getBody()->write(json_encode($payload));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
         $ratingModel = new Rating();
-        $ratingModel->createRating($estrellas, $usuario_id, $juego_id);
+        $result = $ratingModel->createRating($estrellas, $usuario_id, $juego_id);
 
-        $response->getBody()->write(json_encode(['message' => 'Calificación creada con éxito']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+        // Respuesta en caso de éxito o error
+        $payload = $result ? ['message' => 'Calificación creada con éxito'] : ['message' => 'Error al crear la calificación'];
+        $statusCode = $result ? 201 : 500;
+
+        $response->getBody()->write(json_encode($payload));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
     }
 
-    public function updateRating(Request $request, Response $response, $args)
+    public function updateRating(Request $request, Response $response, array $args)
     {
         $id = $args['id'];
         $data = $request->getParsedBody();
-        $estrellas = (int)$data['estrellas'];
+         //chear que este logeuado
+        $token = $data['token'] ;
+        $vencimiento_token = $data['vencimiento_token'];
+        
+        $estrellas = (int) $data['estrellas'];
 
+
+        // Validar número de estrellas
         if ($estrellas < 1 || $estrellas > 5) {
-            $response->getBody()->write(json_encode(['message' => 'Número de estrellas inválido']));
+            $payload = ['message' => 'Número de estrellas inválido'];
+            $response->getBody()->write(json_encode($payload));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
         $ratingModel = new Rating();
-        if ($ratingModel->updateRating($id, $estrellas)) {
-            $response->getBody()->write(json_encode(['message' => 'Calificación actualizada con éxito']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        }
+        $result = $ratingModel->updateRating($id, $estrellas);
 
-        $response->getBody()->write(json_encode(['message' => 'No se pudo actualizar la calificación']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
+        // Respuesta en caso de éxito o error
+        $payload = ['message' => 'Calificación actualizada con éxito'];
+       
+
+        $response->getBody()->write(json_encode($payload));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
 
-    public function deleteRating(Request $request, Response $response, $args)
+    public function deleteRating(Request $request, Response $response, array $args)
     {
         $id = $args['id'];
+         //chear que este logeuado
+         $data = $request->getParsedBody();
+         $token = $data['token'] ;
+         $vencimiento_token = $data['vencimiento_token'];
 
         $ratingModel = new Rating();
-        if ($ratingModel->deleteRating($id)) {
-            $response->getBody()->write(json_encode(['message' => 'Calificación eliminada con éxito']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
-        }
+        $result = $ratingModel->deleteRating($id);
 
-        $response->getBody()->write(json_encode(['message' => 'No se pudo eliminar la calificación']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
+        // Respuesta en caso de éxito o error
+        $payload = $result ? ['message' => 'Calificación eliminada con éxito'] : ['message' => 'No se pudo eliminar la calificación'];
+        $statusCode = $result ? 200 : 409;
+
+        $response->getBody()->write(json_encode($payload));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
     }
 }

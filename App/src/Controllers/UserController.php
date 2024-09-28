@@ -8,7 +8,7 @@ use App\Models\User;
 
 class UserController
 {
-    public function login(Request $request, Response $response)
+    /*public function login(Request $request, Response $response)
     {
         $data = $request->getParsedBody();
         $nombre_usuario = $data['nombre_usuario'];
@@ -42,56 +42,98 @@ class UserController
 
         $response->getBody()->write(json_encode(['message' => 'Usuario registrado con éxito']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
-    }
+    }*/
 
     public function createUser(Request $request, Response $response)
     {
         $data = $request->getParsedBody();
         $nombre_usuario = $data['nombre_usuario'];
-        $clave = password_hash($data['clave'], PASSWORD_DEFAULT); // Encriptar la clave
-        $es_admin = $data['es_admin'] ?? 0; // Por defecto no es admin
+        $clave = $data['clave']; 
+        $es_admin = $data['es_admin']; 
         $userModel = new User();
+        
+
+        //chequeo 
+        $chequeo_pass = "/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/";
+
+        if(!((strlen($nombre_usuario) < 21) && (strlen($nombre_usuario)>5) && (preg_match($chequeo_pass, $clave)) && (strlen($clave) > 7))){
+            $payload =  ['message' => 'Clave o usuario no cumple condiciones']; 
+            $response->getBody()->write(json_encode($payload));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        //buscar si existe el usuario
+
+        $buscar_usuario = $userModel()->getUserByUsuario($nombre_usuario);
+        $existe_usuario = $buscar_usuario->get_result();
+        if($existe_usuario->num_rows > 0){
+            $payload =  ['message' => 'ya existe el usuario']; 
+            $response->getBody()->write(json_encode($payload));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+
+        }
 
         // Llamada al modelo para crear el usuario
         $result = $userModel->createUser($nombre_usuario, $clave, $es_admin);
 
-        $payload = $result ? ['message' => 'Usuario creado exitosamente'] : ['error' => 'Error al crear usuario'];
-
-        // Especificar el código de estado
-        $statusCode = $result ? 201 : 500;
-
+        $payload = ['message' => 'Usuario creado exitosamente'] ;
+        
         $response->getBody()->write(json_encode($payload));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
 
     public function updateUser(Request $request, Response $response, array $args)
-    {
+    {   
         $id = $args['id'];
         $data = $request->getParsedBody();
         
-        // Extraer los parámetros opcionales
-        $nombre_usuario = $data['nombre_usuario'] ?? null;
-        $clave = isset($data['clave']) ? password_hash($data['clave'], PASSWORD_DEFAULT) : null;
-        $token = $data['token'] ?? null;
-        $vencimiento_token = $data['vencimiento_token'] ?? null;
-        $es_admin = $data['es_admin'] ?? null;
         $userModel = new User();
+        // hacer una conecion con la base de datos y traer ven del token
 
-        $result = $userModel->updateUser($id, $nombre_usuario, $clave, $token, $vencimiento_token, $es_admin);
+        $nombre_usuario = $data['nombre_usuario'] ;
+        $clave = $data['clave'] ;
+        $token = $data['token'] ;
+        $vencimiento_token = $data['vencimiento_token'];
+    
+        //chequeo 
+        $chequeo_pass = "/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[\W_]).{8,}$/";
 
-        $payload = $result ? ['message' => 'Usuario actualizado exitosamente'] : ['error' => 'Error al actualizar usuario'];
+        if(!((strlen($nombre_usuario) < 21) && (strlen($nombre_usuario)>5) && (preg_match($chequeo_pass, $clave)) && (strlen($clave) > 7))){
+            $payload =  ['message' => 'Clave o usuario no cumple condiciones']; 
+            $response->getBody()->write(json_encode($payload));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
 
-        $statusCode = $result ? 200 : 500;
+        //buscar si existe el usuario
+
+        $buscar_usuario = $userModel()->getUserByUsuario($nombre_usuario);
+        $existe_usuario = $buscar_usuario->get_result();
+        if($existe_usuario->num_rows > 0){
+            $payload =  ['message' => 'ya existe el usuario']; 
+            $response->getBody()->write(json_encode($payload));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+
+        }
+
+        $result = $userModel->updateUser($id, $nombre_usuario, $clave);
+
+        $payload = ['message' => 'Usuario actualizado exitosamente'];
+
+        
 
         $response->getBody()->write(json_encode($payload));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
     }
 
     public function deleteUser(Request $request, Response $response, array $args)
-    {
+    {   
+        $data = $request->getParsedBody();
+        $token = $data['token'] ;
+        $vencimiento_token = $data['vencimiento_token'];
+        //cheaer si esta log
         $id = $args['id'];
         $userModel = new User();
-
+         //antes de llamar hayq  ver si tiene calificacion
         $result = $userModel->deleteUser($id);
 
         $payload = $result ? ['message' => 'Usuario eliminado correctamente'] : ['error' => 'Error al eliminar usuario'];
@@ -103,10 +145,17 @@ class UserController
     }
 
     public function getUser(Request $request, Response $response, array $args)
-    {
+    {   
+        
+        $data = $request->getParsedBody();
+        $token = $data['token'] ;
+        $vencimiento_token = $data['vencimiento_token'];
+        //cheaer si esta log
+
         $id = $args['id'];
         $userModel = new User();
 
+        
         $user = $userModel->getUserById($id);
 
         if ($user) {
