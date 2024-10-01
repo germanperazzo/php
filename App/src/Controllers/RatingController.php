@@ -19,7 +19,7 @@ class RatingController
         $usuario_id = (int) $data['usuario_id'];
         $juego_id = (int) $data['juego_id'];
 
-        // Validar número de estrellas
+        // Valida número de estrellas
         if ($estrellas < 1 || $estrellas > 5) {
             $payload = ['message' => 'Número de estrellas inválido'];
             $response->getBody()->write(json_encode($payload));
@@ -73,7 +73,7 @@ class RatingController
          $data = $request->getParsedBody();
          $token = $data['token'] ;
          $vencimiento_token = $data['vencimiento_token'];
-
+        
         $ratingModel = new Rating();
         $result = $ratingModel->deleteRating($id);
 
