@@ -13,10 +13,16 @@ class User{
         }
     }
 
+    public function registerUser($nombre_usuario, $clave, $token){
+        $stmt = $this->db->prepare("INSERT INTO usuario (nombre_usuario = ?, clave = ?, token = ?)");
+        $stmt->bind_param('sss', $nombre_usuario, $clave, $token);
+        return $stmt->execute();
+    }
+
     public function createUser($nombre_usuario, $clave, $es_admin)
     {   
         
-        $stmt = $this->db->prepare("INSERT INTO usuario (nombre_usuario, clave, es_admin) VALUES (?, ?, ?)");
+        $stmt = $this->db->prepare("INSERT INTO usuario (nombre_usuario = ?, clave = ?, es_admin = ?)");
         $stmt->bind_param('ssi', $nombre_usuario, $clave, $es_admin);
         return $stmt->execute();
     }
@@ -46,28 +52,40 @@ class User{
         return $stmt->get_result()->fetch_assoc();
     }
 
-    public function updateToken($id, $token, $vencimiento)
+    /*public function updateToken($id, $token, $vencimiento)
     {
         $stmt = $this->db->prepare("UPDATE usuario SET token = ?, vencimiento_token = ? WHERE id = ?");
         $stmt->bind_param('ssi', $token, $vencimiento, $id);
         return $stmt->execute();
     }
-    
+    */
 
-    public function isTokenValid($token)
+    public function getToken($id)
     {
-        $query = "SELECT id FROM usuario WHERE token = ? AND vencimiento_token > NOW()";
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param('s', $token);
+        ;
+        $stmt = $this->db->prepare("SELECT  token, vencimiento_token FROM usuario WHERE id = ? ");
+        $stmt->bind_param('i', $id);
         $stmt->execute();
-        $result = $stmt->get_result();
+        
 
-        return $result->num_rows > 0;
+        return $stmt->get_result()->fetch_assoc();
     }
 
     public function getUserByUsuario($nombre_usuario)
     {
         $stmt = $this->db->prepare("SELECT * FROM usuario WHERE nombre_usuario = ?");
+        $stmt->bind_param('i', $nombre_usuario);
+        $stmt->execute();
+        return $stmt->get_result();
+    }
+
+    public function getUserCalificaciones($id)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT , u.nombre_usuario, c.estrellas, j.nombre AS juego_nombre FROM usuario u
+            JOIN calificacion c ON u.id = c.usuario_id
+            JOIN juego j ON c.juego_id = j.id
+            WHERE u.id = ?");
         $stmt->bind_param('i', $nombre_usuario);
         $stmt->execute();
         return $stmt->get_result();
