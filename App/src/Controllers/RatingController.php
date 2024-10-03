@@ -15,9 +15,9 @@ class RatingController
     $token = $data['token'] ;
     $vencimiento_token = $data['vencimiento_token'];
 
-        $estrellas = (int) $data['estrellas'];
-        $usuario_id = (int) $data['usuario_id'];
-        $juego_id = (int) $data['juego_id'];
+        $estrellas =  $data['estrellas'];
+        $usuario_id = $data['usuario_id'];
+        $juego_id =  $data['juego_id'];
 
         // Valida número de estrellas
         if ($estrellas < 1 || $estrellas > 5) {

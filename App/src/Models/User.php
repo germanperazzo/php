@@ -13,9 +13,9 @@ class User{
         }
     }
 
-    public function registerUser($nombre_usuario, $clave, $token){
-        $stmt = $this->db->prepare("INSERT INTO usuario (nombre_usuario = ?, clave = ?, token = ?)");
-        $stmt->bind_param('sss', $nombre_usuario, $clave, $token);
+    public function registerUser($nombre_usuario, $clave){
+        $stmt = $this->db->prepare("INSERT INTO usuario (nombre_usuario = ?, clave = ?)");
+        $stmt->bind_param('ss', $nombre_usuario, $clave);
         return $stmt->execute();
     }
 
@@ -52,13 +52,13 @@ class User{
         return $stmt->get_result()->fetch_assoc();
     }
 
-    /*public function updateToken($id, $token, $vencimiento)
+    public function updateToken($nombre_usuario, $token, $vencimiento)
     {
-        $stmt = $this->db->prepare("UPDATE usuario SET token = ?, vencimiento_token = ? WHERE id = ?");
-        $stmt->bind_param('ssi', $token, $vencimiento, $id);
+        $stmt = $this->db->prepare("UPDATE usuario SET token = ?, vencimiento_token = ? WHERE nombre_usuario = ?");
+        $stmt->bind_param('sss', $token, $vencimiento, $nombre_usuario);
         return $stmt->execute();
     }
-    */
+    
 
     public function getToken($id)
     {
@@ -74,10 +74,11 @@ class User{
     public function getUserByUsuario($nombre_usuario)
     {
         $stmt = $this->db->prepare("SELECT * FROM usuario WHERE nombre_usuario = ?");
-        $stmt->bind_param('i', $nombre_usuario);
+        $stmt->bind_param('s', $nombre_usuario);
         $stmt->execute();
         return $stmt->get_result();
     }
+
 
     public function getUserCalificaciones($id)
     {
